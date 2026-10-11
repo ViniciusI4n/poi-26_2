@@ -43,5 +43,5 @@ curl -i localhost:8082/<code>
 ```bash
 docker compose up -d --build
 docker run --rm -i --network host -e BASE_URL=http://localhost:8082 \
-  grafana/k6 run --vus 50 --duration 30s - < load-test/shortener.js
+  grafana/k6 run - < load-test/shortener.js
 ```
