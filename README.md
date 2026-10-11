@@ -1,1 +1,3 @@
 # poi-26_2
+
+- [`cpu-bound/`](cpu-bound/): aplicação backend CPU-bound (Proof-of-Work com SHA-256, em Java 21 + Spring Boot)
