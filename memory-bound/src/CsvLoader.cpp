@@ -112,7 +112,7 @@ namespace csv
             int id = static_cast<int>(i) + 1;
             std::string name = base.getName() + " #" + std::to_string(id);
 
-            result.emplace_back(id, name, base.getCourse(), age(rng),
+            result.emplace_back(id, name, base.getCourseId(), age(rng),
                                 grade(rng), grade(rng), grade(rng), attendance(rng));
         }
 

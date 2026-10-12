@@ -1,3 +1,31 @@
+# Build (CMake)
 build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeUserPresets.json
+compile_commands.json
+/Makefile
+
+# Binários e objetos
+/app
 *.exe
 *.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+
+# Arquivo temporário da gravação do CSV
+*.csv.tmp
+
+# Ferramentas/IDEs
+.cache/
+.clangd/
+.vscode/
+.idea/
+*.swp
+.DS_Store

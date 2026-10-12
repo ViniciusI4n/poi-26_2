@@ -14,9 +14,13 @@ memory-bound/
 ├── data/students.csv           # 100 alunos de exemplo
 ├── include/ e src/
 │   ├── Student                 # entidade
+│   ├── CourseCatalog           # cursos guardados como id inteiro (nome ↔ id)
 │   ├── CsvLoader               # leitura, gravação e escala do CSV
 │   ├── StudentRepository       # CRUD em memória e operações pesadas
-│   └── StudentController       # rotas HTTP e JSON
+│   ├── StudentController       # rotas HTTP e JSON
+│   └── Metrics                 # métricas no formato Prometheus
+├── load-test/students.js       # teste de carga (k6)
+├── prometheus/prometheus.yml   # configuração de coleta do Prometheus
 └── third_party/                # httplib.h e json.hpp (só cabeçalhos)
 ```
 
@@ -69,6 +73,7 @@ O executável fica em `build/app` (Linux) ou `build/app.exe` (Windows).
 | `--port`  | `8080`              | Porta do servidor                                      |
 | `--csv`   | `data/students.csv` | Arquivo CSV de dados                                   |
 | `--scale` | desligado           | Replica os alunos até chegar a N registros em memória  |
+| `--history` | `32`              | Notas guardadas no histórico de cada aluno (8 bytes cada) |
 
 ### Modo normal
 
@@ -87,9 +92,21 @@ cp data/students.csv /tmp/teste.csv
 ```
 
 O CSV serve só de semente, e o servidor mantém 5 milhões de alunos na RAM
-(cerca de 1 GB). Nesse modo as alterações ficam apenas na memória e o CSV **não** é
-gravado. Referência medida: 3 milhões de alunos ocupam cerca de 560 MB e 5 milhões
-cerca de 985 MB.
+(cerca de 2 GB). Nesse modo as alterações ficam apenas na memória e o CSV **não** é
+gravado.
+
+Cada aluno ocupa cerca de 150 bytes mais `8 × --history` bytes de histórico de notas.
+O histórico é gerado a partir do id (não vai para o CSV) e só é lido pela rota
+`/students/{id}/history`, então ele aumenta a RAM sem aumentar o trabalho de CPU das
+outras rotas. Referência medida com o padrão `--history 32`:
+
+| `--scale`  | RAM (RSS) |
+|------------|-----------|
+| 1 milhão   | ~395 MB   |
+| 5 milhões  | ~1,9 GB   |
+| 10 milhões | ~3,9 GB   |
+
+Com `--history 0`, 10 milhões de alunos ocupam ~1,5 GB.
 
 ## Endpoints
 
@@ -138,6 +155,15 @@ curl http://127.0.0.1:8080/students/1
 ```
 
 Retorna 200 com o aluno, ou 404 se não existir.
+
+### Histórico de notas
+
+```bash
+curl http://127.0.0.1:8080/students/1/history
+```
+
+Resposta: `{"id":1,"history":[7.0,9.0,9.1,...]}`, com `--history` notas. Retorna 404
+se o aluno não existir.
 
 ### Criar aluno
 
@@ -197,6 +223,68 @@ curl "http://127.0.0.1:8080/students/ranking?top=10"
 
 Devolve os `top` alunos com maior média (padrão 10), do melhor para o pior.
 
+### Métricas (Prometheus)
+
+```bash
+curl http://127.0.0.1:8080/metrics
+```
+
+Devolve as métricas no formato de texto do Prometheus:
+
+| Métrica                                | Tipo      | O que mede                                                       |
+|----------------------------------------|-----------|------------------------------------------------------------------|
+| `http_server_requests_seconds`         | histogram | Duração das requisições, por `method`, `route` e `status`        |
+| `students_in_memory`                   | gauge     | Quantidade de alunos mantidos na RAM                             |
+| `students_history_bytes`               | gauge     | Bytes ocupados pelo histórico de notas                           |
+| `process_resident_memory_bytes`        | gauge     | Memória residente (RSS) do processo (só Linux)                   |
+| `process_virtual_memory_bytes`         | gauge     | Memória virtual do processo (só Linux)                           |
+| `process_cpu_seconds_total`            | counter   | Tempo de CPU (usuário + sistema) consumido (só Linux)            |
+| `process_start_time_seconds`           | gauge     | Horário de início do processo (epoch, em segundos)               |
+
+Para coletar com um Prometheus local, com o servidor rodando na porta 8080:
+
+```bash
+docker run --rm --network host \
+  -v "$PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+  prom/prometheus
+```
+
+A interface fica em `http://localhost:9090`. Exemplos de consulta:
+
+```promql
+process_resident_memory_bytes{job="memory-bound"}
+histogram_quantile(0.95, sum by (le, route) (rate(http_server_requests_seconds_bucket[1m])))
+```
+
+## Teste de carga (k6)
+
+Com o servidor rodando em modo escalado:
+
+```bash
+docker run --rm -i --network host -e BASE_URL=http://localhost:8080 \
+  grafana/k6 run - < load-test/students.js
+```
+
+| Variável     | Padrão | O que faz                                                         |
+|--------------|--------|-------------------------------------------------------------------|
+| `RATE`       | `1000` | Requisições por segundo (taxa de chegada fixa)                    |
+| `DURATION`   | `1m`   | Duração do patamar, entre rampas de 30 s                          |
+| `SCAN_RATIO` | `0`    | Fração das requisições que varrem a base (`search`/`stats`/`ranking`) |
+
+A mistura padrão é de acessos pontuais (50% aluno, 30% histórico, 20% página), e a
+taxa é fixa: o objetivo é manter a RAM ocupada e a CPU ociosa. Referência medida com
+10 milhões de alunos (3,8 GB), `RATE=1000`, numa máquina de 16 núcleos:
+
+| `SCAN_RATIO` | CPU da aplicação     | p95 (aluno/histórico) |
+|--------------|----------------------|-----------------------|
+| `0`          | 0,07 núcleo (0,4%)   | ~0,12 ms              |
+| `0.01`       | 0,57 núcleo (3,5%)   | ~0,13 ms              |
+| `0.05`       | 1,2 núcleo (7,2%)    | ~1,4 ms, com timeouts |
+
+Com `SCAN_RATIO=0.05` aparecem timeouts: o servidor atende no máximo `núcleos − 1`
+conexões ao mesmo tempo (pool de threads do `httplib`), e as varreduras lentas
+prendem essas threads.
+
 ## Verificar a gravação no CSV
 
 No modo normal, depois de criar, atualizar ou remover alunos:
@@ -210,7 +298,10 @@ tail -2 /tmp/teste.csv
 
 - As rotas `search`, `stats` e `ranking` percorrem todos os registros, e o custo
   delas cresce com o valor de `--scale`.
-- As rotas de leitura simples (`/students/{id}`, `/health`) são baratas e servem de
-  comparação.
-- O consumo de memória depende quase só de `--scale`, o que facilita variar a RAM da
-  VM e observar quando a aplicação começa a degradar (swap).
+- As rotas de leitura simples (`/students/{id}`, `/students/{id}/history`, `/health`)
+  são baratas e servem de comparação.
+- O consumo de memória depende de `--scale` e `--history`, o que facilita variar a RAM
+  da VM e observar quando a aplicação começa a degradar (swap).
+- Uma varredura limitada pela memória deixa o núcleo esperando a DRAM, mas o sistema
+  operacional conta essa espera como uso de CPU (`top`, `process_cpu_seconds_total`).
+  Para ver RAM alta com CPU ociosa, use a mistura padrão do k6 (`SCAN_RATIO=0`).

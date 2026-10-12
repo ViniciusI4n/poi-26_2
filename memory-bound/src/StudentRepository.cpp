@@ -1,12 +1,39 @@
 #include "StudentRepository.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <functional>
 #include <mutex>
 #include <queue>
 #include <utility>
 
+#include "CourseCatalog.h"
 #include "CsvLoader.h"
+
+namespace
+{
+    // Gera o histórico de notas de forma determinística a partir do id, para que ele
+    // não precise ficar no CSV.
+    void fillHistory(double* out, const Student& student, std::size_t count)
+    {
+        std::uint64_t state = static_cast<std::uint64_t>(student.getId()) * 0x9E3779B97F4A7C15ull;
+        double base = student.average();
+
+        for (std::size_t i = 0; i < count; i++)
+        {
+            state = state * 6364136223846793005ull + 1442695040888963407ull;
+            double noise = static_cast<double>(state >> 40) / (1ull << 24) * 4.0 - 2.0;
+            double grade = std::clamp(base + noise, 0.0, 10.0);
+            out[i] = std::round(grade * 10.0) / 10.0;
+        }
+    }
+}
+
+StudentRepository::StudentRepository(std::size_t historySize)
+    : historySize_(historySize)
+{
+}
 
 void StudentRepository::load(std::vector<Student> students)
 {
@@ -15,12 +42,14 @@ void StudentRepository::load(std::vector<Student> students)
     students_ = std::move(students);
     index_.clear();
     index_.reserve(students_.size());
+    history_.assign(students_.size() * historySize_, 0.0);
     nextId_ = 1;
 
     for (std::size_t i = 0; i < students_.size(); i++)
     {
         int id = students_[i].getId();
         index_[id] = i;
+        fillHistory(history_.data() + i * historySize_, students_[i], historySize_);
 
         if (id >= nextId_)
         {
@@ -45,14 +74,21 @@ void StudentRepository::saveIfEnabled() const
     csv::save(csvPath_, students_);
 }
 
+void StudentRepository::appendHistory(const Student& student)
+{
+    history_.resize(history_.size() + historySize_);
+    fillHistory(history_.data() + history_.size() - historySize_, student, historySize_);
+}
+
 Student StudentRepository::create(const Student& data)
 {
     std::unique_lock lock(mutex_);
 
-    students_.emplace_back(nextId_, data.getName(), data.getCourse(), data.getAge(),
+    students_.emplace_back(nextId_, data.getName(), data.getCourseId(), data.getAge(),
                            data.getGrade1(), data.getGrade2(), data.getGrade3(),
                            data.getAttendance());
     index_[nextId_] = students_.size() - 1;
+    appendHistory(students_.back());
     nextId_++;
 
     saveIfEnabled();
@@ -82,7 +118,7 @@ bool StudentRepository::update(int id, const Student& data)
         return false;
     }
 
-    students_[it->second] = Student(id, data.getName(), data.getCourse(), data.getAge(),
+    students_[it->second] = Student(id, data.getName(), data.getCourseId(), data.getAge(),
                                     data.getGrade1(), data.getGrade2(), data.getGrade3(),
                                     data.getAttendance());
 
@@ -107,9 +143,12 @@ bool StudentRepository::remove(int id)
     {
         students_[pos] = std::move(students_[last]);
         index_[students_[pos].getId()] = pos;
+        std::copy_n(history_.begin() + last * historySize_, historySize_,
+                    history_.begin() + pos * historySize_);
     }
 
     students_.pop_back();
+    history_.resize(history_.size() - historySize_);
     index_.erase(id);
 
     saveIfEnabled();
@@ -139,6 +178,31 @@ std::size_t StudentRepository::size() const
     return students_.size();
 }
 
+std::optional<std::vector<double>> StudentRepository::history(int id) const
+{
+    std::shared_lock lock(mutex_);
+
+    auto it = index_.find(id);
+    if (it == index_.end())
+    {
+        return std::nullopt;
+    }
+
+    auto begin = history_.begin() + it->second * historySize_;
+    return std::vector<double>(begin, begin + historySize_);
+}
+
+std::size_t StudentRepository::historySize() const
+{
+    return historySize_;
+}
+
+std::size_t StudentRepository::historyBytes() const
+{
+    std::shared_lock lock(mutex_);
+    return history_.size() * sizeof(double);
+}
+
 std::vector<Student> StudentRepository::searchByName(const std::string& term,
                                                      std::size_t limit) const
 {
@@ -166,20 +230,25 @@ std::vector<CourseStats> StudentRepository::statistics() const
 {
     std::shared_lock lock(mutex_);
 
-    std::unordered_map<std::string, CourseStats> byCourse;
+    std::vector<CourseStats> byCourse(courses::count());
     for (const Student& student : students_)
     {
-        CourseStats& stats = byCourse[student.getCourse()];
+        CourseStats& stats = byCourse[student.getCourseId()];
         stats.count++;
         stats.averageGrade += student.average();
         stats.averageAttendance += student.getAttendance();
     }
 
     std::vector<CourseStats> result;
-    for (auto& entry : byCourse)
+    for (std::size_t id = 0; id < byCourse.size(); id++)
     {
-        CourseStats stats = entry.second;
-        stats.course = entry.first;
+        CourseStats stats = byCourse[id];
+        if (stats.count == 0)
+        {
+            continue;
+        }
+
+        stats.course = courses::nameOf(static_cast<int>(id));
         stats.averageGrade = stats.averageGrade / stats.count;
         stats.averageAttendance = stats.averageAttendance / stats.count;
         result.push_back(stats);

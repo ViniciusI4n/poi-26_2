@@ -3,6 +3,7 @@
 #include <string>
 
 #include "CsvLoader.h"
+#include "Metrics.h"
 #include "StudentController.h"
 #include "StudentRepository.h"
 #include "httplib.h"
@@ -12,6 +13,7 @@ int main(int argc, char* argv[])
     int port = 8080;
     std::string csvPath = "data/students.csv";
     std::size_t scale = 0;
+    std::size_t history = 32;
 
     for (int i = 1; i + 1 < argc; i += 2)
     {
@@ -29,6 +31,10 @@ int main(int argc, char* argv[])
         else if (flag == "--scale")
         {
             scale = std::stoull(value);
+        }
+        else if (flag == "--history")
+        {
+            history = std::stoull(value);
         }
         else
         {
@@ -50,8 +56,10 @@ int main(int argc, char* argv[])
             std::cout << "scaled to " << students.size() << " students\n";
         }
 
-        StudentRepository repository;
+        StudentRepository repository(history);
         repository.load(std::move(students));
+        std::cout << "grade history: " << history << " entries per student ("
+                  << repository.historyBytes() / (1024 * 1024) << " MB)\n";
 
         if (scale == 0)
         {
@@ -66,7 +74,8 @@ int main(int argc, char* argv[])
         long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
         std::cout << "data ready in " << ms << " ms\n";
 
-        StudentController controller(repository);
+        Metrics metrics(repository);
+        StudentController controller(repository, metrics);
         httplib::Server server;
         controller.registerRoutes(server);
 

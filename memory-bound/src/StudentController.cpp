@@ -1,5 +1,6 @@
 #include "StudentController.h"
 
+#include <chrono>
 #include <stdexcept>
 #include <string>
 
@@ -100,31 +101,61 @@ namespace
             return fallback;
         }
     }
+
+    httplib::Server::Handler timed(Metrics& metrics, std::string method, std::string route,
+                                   httplib::Server::Handler handler)
+    {
+        return [&metrics, method, route, handler](const httplib::Request& req,
+                                                  httplib::Response& res)
+        {
+            auto start = std::chrono::steady_clock::now();
+            auto elapsed = [&start]()
+            {
+                return std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
+                    .count();
+            };
+
+            try
+            {
+                handler(req, res);
+            }
+            catch (...)
+            {
+                metrics.recordRequest(method, route, 500, elapsed());
+                throw;
+            }
+            metrics.recordRequest(method, route, res.status, elapsed());
+        };
+    }
 }
 
-StudentController::StudentController(StudentRepository& repository)
-    : repository_(repository)
+StudentController::StudentController(StudentRepository& repository, Metrics& metrics)
+    : repository_(repository),
+      metrics_(metrics)
 {
 }
 
 void StudentController::registerRoutes(httplib::Server& server)
 {
-    server.Get("/health", [this](const httplib::Request&, httplib::Response& res)
+    server.Get("/health", timed(metrics_, "GET", "/health",
+        [this](const httplib::Request&, httplib::Response& res)
     {
         json body;
         body["status"] = "ok";
         body["students"] = repository_.size();
         sendJson(res, body);
-    });
+    }));
 
-    server.Get("/students", [this](const httplib::Request& req, httplib::Response& res)
+    server.Get("/students", timed(metrics_, "GET", "/students",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         std::size_t offset = queryNumber(req, "offset", 0);
         std::size_t limit = queryNumber(req, "limit", 20);
         sendJson(res, toJson(repository_.list(offset, limit)));
-    });
+    }));
 
-    server.Get(R"(/students/(\d+))", [this](const httplib::Request& req, httplib::Response& res)
+    server.Get(R"(/students/(\d+))", timed(metrics_, "GET", "/students/{id}",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         int id = std::stoi(req.matches[1]);
         std::optional<Student> student = repository_.findById(id);
@@ -136,9 +167,28 @@ void StudentController::registerRoutes(httplib::Server& server)
         }
 
         sendJson(res, toJson(student.value()));
-    });
+    }));
 
-    server.Post("/students", [this](const httplib::Request& req, httplib::Response& res)
+    server.Get(R"(/students/(\d+)/history)", timed(metrics_, "GET", "/students/{id}/history",
+        [this](const httplib::Request& req, httplib::Response& res)
+    {
+        int id = std::stoi(req.matches[1]);
+        std::optional<std::vector<double>> history = repository_.history(id);
+
+        if (!history.has_value())
+        {
+            sendError(res, 404, "student not found");
+            return;
+        }
+
+        json body;
+        body["id"] = id;
+        body["history"] = history.value();
+        sendJson(res, body);
+    }));
+
+    server.Post("/students", timed(metrics_, "POST", "/students",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         try
         {
@@ -157,9 +207,10 @@ void StudentController::registerRoutes(httplib::Server& server)
         {
             sendError(res, 500, e.what());
         }
-    });
+    }));
 
-    server.Put(R"(/students/(\d+))", [this](const httplib::Request& req, httplib::Response& res)
+    server.Put(R"(/students/(\d+))", timed(metrics_, "PUT", "/students/{id}",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         try
         {
@@ -186,9 +237,10 @@ void StudentController::registerRoutes(httplib::Server& server)
         {
             sendError(res, 500, e.what());
         }
-    });
+    }));
 
-    server.Delete(R"(/students/(\d+))", [this](const httplib::Request& req, httplib::Response& res)
+    server.Delete(R"(/students/(\d+))", timed(metrics_, "DELETE", "/students/{id}",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         try
         {
@@ -206,9 +258,10 @@ void StudentController::registerRoutes(httplib::Server& server)
         {
             sendError(res, 500, e.what());
         }
-    });
+    }));
 
-    server.Get("/students/search", [this](const httplib::Request& req, httplib::Response& res)
+    server.Get("/students/search", timed(metrics_, "GET", "/students/search",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         if (!req.has_param("name"))
         {
@@ -219,9 +272,10 @@ void StudentController::registerRoutes(httplib::Server& server)
         std::string term = req.get_param_value("name");
         std::size_t limit = queryNumber(req, "limit", 20);
         sendJson(res, toJson(repository_.searchByName(term, limit)));
-    });
+    }));
 
-    server.Get("/students/stats", [this](const httplib::Request&, httplib::Response& res)
+    server.Get("/students/stats", timed(metrics_, "GET", "/students/stats",
+        [this](const httplib::Request&, httplib::Response& res)
     {
         json courses = json::array();
         for (const CourseStats& c : repository_.statistics())
@@ -233,11 +287,17 @@ void StudentController::registerRoutes(httplib::Server& server)
         body["total"] = repository_.size();
         body["courses"] = courses;
         sendJson(res, body);
-    });
+    }));
 
-    server.Get("/students/ranking", [this](const httplib::Request& req, httplib::Response& res)
+    server.Get("/students/ranking", timed(metrics_, "GET", "/students/ranking",
+        [this](const httplib::Request& req, httplib::Response& res)
     {
         std::size_t top = queryNumber(req, "top", 10);
         sendJson(res, toJson(repository_.topByAverage(top)));
+    }));
+
+    server.Get("/metrics", [this](const httplib::Request&, httplib::Response& res)
+    {
+        res.set_content(metrics_.render(), "text/plain; version=0.0.4; charset=utf-8");
     });
 }

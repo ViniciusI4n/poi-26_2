@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: memory-bound
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["localhost:8080"]
+        labels:
+          application: memory-bound

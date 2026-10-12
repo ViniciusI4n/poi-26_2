@@ -10,12 +10,15 @@ endif()
 add_executable(app
   main.cpp
   src/Student.cpp
+  src/CourseCatalog.cpp
   src/CsvLoader.cpp
   src/StudentRepository.cpp
-  src/StudentController.cpp)
+  src/StudentController.cpp
+  src/Metrics.cpp)
 
 target_include_directories(app PRIVATE include third_party)
 target_compile_options(app PRIVATE -Wall -Wextra)
+target_compile_definitions(app PRIVATE CPPHTTPLIB_TCP_NODELAY=true)
 
 find_package(Threads REQUIRED)
 target_link_libraries(app PRIVATE Threads::Threads)
