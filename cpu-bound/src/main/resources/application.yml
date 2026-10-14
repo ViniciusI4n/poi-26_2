@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: cpu-bound
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: ${SERVER_MAX_THREADS:200}
+
+pow:
+  max-difficulty: ${POW_MAX_DIFFICULTY:10}
+  timeout-ms: ${POW_TIMEOUT_MS:300000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

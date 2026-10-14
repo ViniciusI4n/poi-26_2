@@ -1,0 +1,101 @@
+id,name,course,age,grade1,grade2,grade3,attendance
+1,Eduarda Oliveira,Physics,19,6.0,9.4,9.6,87.5
+2,Bruno Pereira,Engineering,21,8.8,0.2,1.7,90.5
+3,Ana Almeida,Mathematics,19,4.5,7.7,3.1,70.7
+4,Felipe Ferreira,Physics,18,3.9,3.3,5.3,76.8
+5,Rafaela Almeida,Medicine,24,6.5,0.9,0.4,77.3
+6,Diego Almeida,Computer Science,18,0.6,4.2,0.7,80.1
+7,Henrique Costa,Law,25,0.5,3.4,0.3,90.3
+8,Diego Lima,Mathematics,29,0.8,8.9,5.8,57.4
+9,Lucas Almeida,Medicine,23,4.5,7.6,4.0,65.5
+10,Nicolas Pereira,Mathematics,29,9.0,0.6,9.0,77.3
+11,Diego Souza,Engineering,21,6.8,3.8,0.3,66.2
+12,Isabela Oliveira,Physics,26,8.9,0.2,4.2,61.5
+13,Mariana Costa,Engineering,22,4.2,9.6,4.2,65.6
+14,Olivia Pereira,Medicine,28,0.6,5.7,2.1,66.9
+15,Rafaela Santos,Law,27,8.7,5.8,6.9,91.9
+16,Samuel Santos,Physics,19,1.2,2.4,0.1,71.2
+17,Carla Oliveira,Engineering,23,5.1,0.2,6.8,91.3
+18,Gabriela Almeida,Physics,20,3.4,2.2,0.2,67.8
+19,Henrique Santos,Mathematics,20,2.6,5.5,4.8,68.7
+20,Tatiana Souza,Physics,26,2.7,0.9,7.9,96.6
+21,Joao Lima,Computer Science,30,4.8,6.0,1.1,69.8
+22,Vitor Souza,Medicine,22,2.5,2.4,8.2,95.5
+23,Isabela Costa,Medicine,29,1.7,4.1,0.5,53.5
+24,Bruno Silva,Physics,26,5.3,8.0,9.6,96.5
+25,Joao Ribeiro,Law,17,6.4,7.4,3.8,72.0
+26,Gabriela Pereira,Physics,23,1.5,2.8,4.9,80.3
+27,Karina Souza,Law,24,8.3,3.7,1.2,93.1
+28,Carla Silva,Mathematics,24,8.5,8.0,4.3,86.6
+29,Lucas Ferreira,Medicine,24,6.9,7.3,4.1,66.5
+30,Vitor Santos,Computer Science,30,7.0,7.7,0.4,95.3
+31,Felipe Souza,Physics,20,4.8,7.7,3.0,65.2
+32,Vitor Lima,Law,28,8.9,9.0,2.8,99.4
+33,Isabela Silva,Medicine,28,0.7,0.2,4.2,75.3
+34,Gabriela Costa,Computer Science,29,2.0,6.1,5.1,63.4
+35,Carla Ribeiro,Engineering,28,8.8,9.0,4.8,66.9
+36,Samuel Souza,Physics,23,6.2,0.7,2.2,93.7
+37,Isabela Ribeiro,Engineering,27,5.3,7.2,5.1,98.8
+38,Isabela Ferreira,Mathematics,28,0.5,0.6,2.0,61.6
+39,Lucas Almeida,Physics,25,1.5,8.2,5.6,53.1
+40,Rafaela Pereira,Engineering,17,0.2,1.6,5.6,98.1
+41,Isabela Santos,Computer Science,21,3.0,0.7,2.3,72.0
+42,Lucas Almeida,Physics,24,3.0,5.8,7.5,85.7
+43,Felipe Silva,Physics,22,1.4,7.8,0.9,94.6
+44,Tatiana Ferreira,Physics,20,7.5,2.0,6.5,86.1
+45,Eduarda Lima,Engineering,29,4.5,6.6,2.9,98.9
+46,Samuel Ribeiro,Engineering,30,0.5,3.2,4.8,88.4
+47,Isabela Silva,Law,22,5.4,2.7,6.0,96.4
+48,Samuel Ferreira,Physics,23,4.6,3.6,2.9,87.0
+49,Ana Ferreira,Physics,27,0.6,4.5,6.0,72.4
+50,Bruno Ribeiro,Medicine,28,7.6,8.1,1.9,61.0
+51,Mariana Souza,Mathematics,26,7.0,6.6,1.6,60.7
+52,Olivia Oliveira,Medicine,18,7.8,9.4,3.7,50.8
+53,Joao Costa,Computer Science,19,8.1,9.9,9.3,92.2
+54,Carla Lima,Engineering,18,2.6,0.5,5.4,52.6
+55,Lucas Almeida,Mathematics,19,5.3,4.3,7.0,59.7
+56,Pedro Souza,Mathematics,20,9.0,6.7,0.3,85.6
+57,Diego Pereira,Mathematics,24,5.8,3.6,3.1,51.5
+58,Pedro Lima,Mathematics,20,9.4,9.8,1.2,93.7
+59,Gabriela Ferreira,Physics,29,5.6,4.7,2.1,62.7
+60,Carla Oliveira,Law,21,7.1,3.5,2.9,71.4
+61,Rafaela Souza,Medicine,17,8.5,3.6,9.9,59.9
+62,Mariana Silva,Mathematics,23,3.1,0.9,1.0,84.6
+63,Karina Ribeiro,Medicine,20,6.2,8.1,8.2,78.0
+64,Samuel Oliveira,Engineering,17,3.4,7.2,4.2,73.9
+65,Rafaela Ferreira,Engineering,20,6.3,7.0,2.9,99.0
+66,Isabela Santos,Engineering,29,1.5,1.9,4.2,61.2
+67,Gabriela Silva,Medicine,27,1.9,4.6,3.5,68.4
+68,Pedro Souza,Physics,24,2.2,3.4,2.7,63.7
+69,Joao Souza,Computer Science,28,7.3,3.2,1.8,68.4
+70,Diego Almeida,Physics,20,7.9,0.3,0.0,94.2
+71,Rafaela Costa,Law,21,6.7,0.3,7.1,76.1
+72,Bruno Ribeiro,Law,21,6.4,7.7,3.9,63.1
+73,Pedro Costa,Physics,28,1.9,7.8,2.1,59.4
+74,Lucas Santos,Engineering,22,5.8,1.4,3.7,90.3
+75,Felipe Almeida,Law,26,8.5,5.3,7.0,60.4
+76,Pedro Oliveira,Computer Science,25,5.3,4.4,7.9,81.7
+77,Bruno Ribeiro,Physics,18,4.4,6.4,3.5,80.0
+78,Eduarda Ribeiro,Engineering,17,9.4,8.1,7.0,90.5
+79,Gabriela Souza,Medicine,27,1.6,3.8,5.4,90.7
+80,Tatiana Pereira,Mathematics,25,5.4,6.6,7.6,89.2
+81,Isabela Lima,Mathematics,24,3.2,2.0,1.5,80.4
+82,Mariana Ribeiro,Medicine,24,5.8,7.8,5.3,96.2
+83,Lucas Lima,Mathematics,22,3.4,4.3,7.6,91.4
+84,Lucas Ribeiro,Medicine,21,5.3,8.8,7.7,90.9
+85,Joao Ferreira,Medicine,22,2.9,2.6,5.2,75.5
+86,Vitor Almeida,Mathematics,28,0.5,2.6,1.8,51.1
+87,Nicolas Lima,Engineering,28,7.5,8.1,6.2,78.1
+88,Eduarda Lima,Physics,20,6.2,5.3,6.0,97.1
+89,Bruno Silva,Physics,26,8.4,7.7,9.0,53.7
+90,Pedro Ribeiro,Law,27,4.4,5.5,2.9,84.9
+91,Felipe Souza,Medicine,18,1.4,6.8,4.0,69.4
+92,Vitor Lima,Engineering,26,7.8,4.8,1.8,78.8
+93,Joao Lima,Computer Science,25,2.1,1.7,7.4,53.2
+94,Karina Almeida,Computer Science,23,8.1,2.2,0.4,86.4
+95,Rafaela Ribeiro,Computer Science,23,4.1,3.2,6.4,95.6
+96,Mariana Souza,Computer Science,30,6.9,0.9,8.1,84.8
+97,Eduarda Lima,Physics,23,1.3,7.8,3.0,78.8
+98,Pedro Costa,Physics,27,2.5,8.6,5.2,93.8
+99,Ana Almeida,Physics,27,4.3,2.4,7.8,83.6
+100,Henrique Pereira,Computer Science,22,8.8,4.0,4.8,83.5

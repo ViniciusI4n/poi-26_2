@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: io-bound
+  mvc:
+    problemdetails:
+      enabled: true
+  threads:
+    virtual:
+      enabled: ${VIRTUAL_THREADS:false}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shortener}
+    username: ${DB_USER:shortener}
+    password: ${DB_PASSWORD:shortener}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: ${SERVER_MAX_THREADS:200}
+
+shortener:
+  base-url: ${BASE_URL:http://localhost:8080}
+  simulated-db-latency-ms: ${SIMULATED_DB_LATENCY_MS:50}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+  metrics:
+    tags:
+      application: ${spring.application.name}
