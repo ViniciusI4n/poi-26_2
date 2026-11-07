@@ -1,7 +1,7 @@
 services:
   cpu-bound:
     build: ./cpu-bound
-    image: poi/cpu-bound
+    image: viniciusi4n/cpu-bound
     restart: unless-stopped
     ports:
       - "8081:8080"
@@ -27,7 +27,7 @@ services:
 
   io-bound:
     build: ./io-bound
-    image: poi/io-bound
+    image: viniciusi4n/io-bound
     restart: unless-stopped
     depends_on:
       io-bound-db:
@@ -46,7 +46,7 @@ services:
 
   memory-bound:
     build: ./memory-bound
-    image: poi/memory-bound
+    image: viniciusi4n/memory-bound
     restart: unless-stopped
     ports:
       - "8083:8080"
