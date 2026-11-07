@@ -108,6 +108,13 @@ outras rotas. Referência medida com o padrão `--history 32`:
 
 Com `--history 0`, 10 milhões de alunos ocupam ~1,5 GB.
 
+## Docker
+
+```bash
+docker build -t memory-bound .
+docker run --rm -p 8080:8080 memory-bound --scale 5000000
+```
+
 ## Endpoints
 
 Os exemplos usam `curl` e o servidor em `127.0.0.1:8080`.

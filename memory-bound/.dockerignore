@@ -1,0 +1,10 @@
+build/
+cmake-build-*/
+.cache/
+.idea/
+.vscode/
+load-test/
+prometheus/
+*.md
+*.csv.tmp
+app
