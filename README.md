@@ -13,4 +13,4 @@ docker compose up -d --build
 docker compose down -v
 ```
 
-Portas: cpu-bound `8081`, io-bound `8082`, memory-bound `8083`. Para o modo escalado do memory-bound, use `MB_SCALE=5000000 docker compose up -d`.
+Portas: cpu-bound `8090`, memory-bound `8091`, io-bound `8092`. Para o modo escalado do memory-bound, use `MB_SCALE=5000000 docker compose up -d`.

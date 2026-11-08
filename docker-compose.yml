@@ -4,7 +4,7 @@ services:
     image: viniciusi4n/cpu-bound
     restart: unless-stopped
     ports:
-      - "8081:8080"
+      - "8090:8080"
     environment:
       POW_MAX_DIFFICULTY: ${POW_MAX_DIFFICULTY:-10}
       POW_TIMEOUT_MS: ${POW_TIMEOUT_MS:-300000}
@@ -33,12 +33,12 @@ services:
       io-bound-db:
         condition: service_healthy
     ports:
-      - "8082:8080"
+      - "8092:8080"
     environment:
       DB_URL: jdbc:postgresql://io-bound-db:5432/shortener
       DB_USER: shortener
       DB_PASSWORD: shortener
-      BASE_URL: ${IO_BASE_URL:-http://localhost:8082}
+      BASE_URL: ${IO_BASE_URL:-http://localhost:8092}
       DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
       SIMULATED_DB_LATENCY_MS: ${SIMULATED_DB_LATENCY_MS:-50}
       VIRTUAL_THREADS: ${VIRTUAL_THREADS:-false}
@@ -49,7 +49,7 @@ services:
     image: viniciusi4n/memory-bound
     restart: unless-stopped
     ports:
-      - "8083:8080"
+      - "8091:8080"
     command:
       - --port
       - "8080"
