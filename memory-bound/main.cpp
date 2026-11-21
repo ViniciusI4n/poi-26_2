@@ -10,6 +10,8 @@
 
 int main(int argc, char* argv[])
 {
+    std::cout << std::unitbuf;
+
     int port = 8080;
     std::string csvPath = "data/students.csv";
     std::size_t scale = 0;
