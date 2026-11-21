@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
         - name: seed-csv
-          image: memory-bound:1.0
+          image: viniciusi4n/memory-bound:1.0
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
@@ -29,7 +29,7 @@ spec:
               mountPath: /data
       containers:
         - name: memory-bound
-          image: memory-bound:1.0
+          image: viniciusi4n/memory-bound:1.0
           imagePullPolicy: IfNotPresent
           args: ["--port", "8080", "--csv", "/app/data/students.csv", "--scale", "0", "--history", "32"]
           ports:

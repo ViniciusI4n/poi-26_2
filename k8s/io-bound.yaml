@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: io-bound
-          image: io-bound:1.0
+          image: viniciusi4n/io-bound:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
