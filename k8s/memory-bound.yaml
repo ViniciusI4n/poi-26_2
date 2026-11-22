@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: memory-bound
+  namespace: poi
+spec:
+  serviceName: memory-bound
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memory-bound
+  template:
+    metadata:
+      labels:
+        app: memory-bound
+    spec:
+      initContainers:
+        - name: seed-csv
+          image: viniciusi4n/memory-bound:1.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - "[ -f /data/students.csv ] || cp /app/data/students.csv /data/; chown -R 1001:1001 /data"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      containers:
+        - name: memory-bound
+          image: viniciusi4n/memory-bound:1.0
+          imagePullPolicy: IfNotPresent
+          args: ["--port", "8080", "--csv", "/app/data/students.csv", "--scale", "0", "--history", "32"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memory-bound
+  namespace: poi
+spec:
+  type: NodePort
+  selector:
+    app: memory-bound
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30081

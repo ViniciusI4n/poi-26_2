@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-bound
+  namespace: poi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cpu-bound
+  template:
+    metadata:
+      labels:
+        app: cpu-bound
+    spec:
+      containers:
+        - name: cpu-bound
+          image: viniciusi4n/cpu-bound:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POW_MAX_DIFFICULTY
+              value: "10"
+            - name: POW_TIMEOUT_MS
+              value: "300000"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cpu-bound
+  namespace: poi
+spec:
+  type: NodePort
+  selector:
+    app: cpu-bound
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
